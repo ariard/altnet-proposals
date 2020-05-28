@@ -1,0 +1,920 @@
+--- Log opened Thu May 21 00:00:28 2020
+00:02 -!- marcoagner [~user@bl13-226-166.dsl.telepac.pt] has joined #bitcoin-core-dev
+00:06 -!- Pavlenex [~Thunderbi@141.98.103.251] has joined #bitcoin-core-dev
+00:09 -!- jonatack [~jon@2a01:e0a:53c:a200:bb54:3be5:c3d0:9ce5] has quit [Ping timeout: 252 seconds]
+00:10 -!- jonatack [~jon@2a01:e0a:53c:a200:bb54:3be5:c3d0:9ce5] has joined #bitcoin-core-dev
+00:10 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+00:10 < bitcoin-git> [bitcoin] fanquake pushed 3 commits to master: https://github.com/bitcoin/bitcoin/compare/3eda7ea9ba72...17df15efb546
+00:10 < bitcoin-git> bitcoin/master 85f4a4b Carl Dong: guix: Make V=1 more powerful for debugging
+00:10 < bitcoin-git> bitcoin/master f852761 Carl Dong: guix: Add clarifying documentation for V env var
+00:10 < bitcoin-git> bitcoin/master 17df15e fanquake: Merge #18958: guix: Make V=1 more powerful for debugging
+00:10 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+00:10 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+00:10 < bitcoin-git> [bitcoin] fanquake merged pull request #18958: guix: Make V=1 more powerful for debugging (master...2020-05-guix-improvements) https://github.com/bitcoin/bitcoin/pull/18958
+00:10 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+00:10 -!- harrigan [~harrigan@ptr-93-89-242-235.ip.airwire.ie] has quit [Quit: ZNC 1.7.5 - https://znc.in]
+00:12 -!- harrigan [~harrigan@ptr-93-89-242-235.ip.airwire.ie] has joined #bitcoin-core-dev
+00:15 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has joined #bitcoin-core-dev
+00:20 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has quit [Ping timeout: 258 seconds]
+00:20 -!- Guyver2 [Guyver@guyver2.xs4all.nl] has joined #bitcoin-core-dev
+00:26 < vasild> CI seems to be not starting on #19031 for 10ish hours. How do I kick it to start?
+00:26 < gribble> https://github.com/bitcoin/bitcoin/issues/19031 | Implement ADDRv2 support (part of BIP155) by vasild · Pull Request #19031 · bitcoin/bitcoin · GitHub
+00:27 < vasild> More importantly - why did it not start? Could it be that I force pushed two times within a few minutes?
+00:28 < sipa> yeah, that may cause it
+00:28 < sipa> just push again
+00:28 < fanquake> Looks like it did run
+00:28 < fanquake> https://travis-ci.org/github/bitcoin/bitcoin/builds/689316499
+00:28 < fanquake> Results may have just not made it back  to GH  for some reason
+00:28 < elichai2> Hi, I'm looking at issue #19036, and shouldn't this: https://github.com/bitcoin/bitcoin/blob/master/src/wallet/wallet.cpp#L328 be `continue;` instead of `return false;` so it will continue trying master keys?
+00:28 < gribble> https://github.com/bitcoin/bitcoin/issues/19036 | Cannot change passphrase even if it is correct · Issue #19036 · bitcoin/bitcoin · GitHub
+00:29 < elichai2> just like here: https://github.com/bitcoin/bitcoin/blob/master/src/wallet/wallet.cpp#L302
+00:29 < fanquake> vasild: I can restart it, but  looks like you'll want to browse those logs
+00:30  * vasild looking...
+00:33 < vasild> fanquake: https://travis-ci.org/github/bitcoin/bitcoin/builds/689316499 that is the result from the initial run after PR was opened. Afterwards I push-f'ed 2 times, hopefully resolving those failures (first push -f) and rebasing (second push -f)
+00:34 < fanquake> vasild: ok. I'll restart that build and see what happens,  and if it re-connects to GH
+00:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+00:35 < bitcoin-git> [bitcoin] fanquake pushed 4 commits to master: https://github.com/bitcoin/bitcoin/compare/17df15efb546...97b21b302a11
+00:35 < bitcoin-git> bitcoin/master 5d1377b Russell Yanofsky: build: multiprocess autotools changes
+00:35 < bitcoin-git> bitcoin/master 603fd6a Russell Yanofsky: depends: add MULTIPROCESS depends option
+00:35 < bitcoin-git> bitcoin/master e2bab2a Russell Yanofsky: multiprocess: add multiprocess travis configuration
+00:35 < vasild> It is not very obvious but the travis job says "Commit d48ece5" and when I click on it I see on github "Merge 89d346a into 448bdff". 89d346a was the tip when the PR was opened
+00:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+00:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+00:35 < bitcoin-git> [bitcoin] fanquake merged pull request #18677: Multiprocess build support (master...pr/ipc-build2) https://github.com/bitcoin/bitcoin/pull/18677
+00:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+00:37 < fanquake> vasild: ah I think I see the issue
+00:37 < fanquake> "GitHub payload is missing a merge commit (mergeable_state: "dirty", merged: false)"
+00:37 < fanquake> If you look here: https://travis-ci.org/github/bitcoin/bitcoin/requests, that was the status for your branch
+00:38 < vasild> hmm, what does that mean?
+00:38 < fanquake> Maybe GHs API being a bit broken
+00:41 < fanquake> If the results don't show up on GH shortly, I'd say just push to the branch again, and that might kick everything back into gear
+00:42 < vasild> https://github.com/travis-ci/docs-travis-ci-com/blob/master/user/common-build-problems.md
+00:42 < vasild> "GitHub payload is missing a merge commit", please confirm your pull request is open and mergeable.
+00:43 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+00:43 < bitcoin-git> [bitcoin] hebasto closed pull request #19029: net: Fix CThreadInterrupt::sleep_for TSan issues (master...200520-interrupts) https://github.com/bitcoin/bitcoin/pull/19029
+00:43 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+00:43 < vasild> it wasn't mergeable
+00:43 < fanquake> Maybe it got caught out somehow between the two forces pushes
+00:43 < fanquake> You should probably just push again for good measure
+00:44 < vasild> yes, I will (needlessly) rebase now and push again
+00:44 < vasild> hopefully nobody started reviewing yet :)
+00:46 < vasild> So, at the time I pushed some fixes to the PR the master branch has advanced in such a way that it would conflict. Makes sense that CI stumbled because it tries to merge the PR into master and build/test that.
+00:47 -!- hebasto [~hebasto@95.164.65.194] has quit [Ping timeout: 246 seconds]
+00:48 < vasild> And maybe the second push which rebased on latest master (resovling conflicts) was missed because it came too soon.
+00:48 < vasild> pushed
+00:49 < fanquake> Looks like it good now
+00:50 < vasild> yes, thanks!
+00:50 -!- hebasto [~hebasto@95.164.65.194] has joined #bitcoin-core-dev
+00:58 -!- jonatack [~jon@2a01:e0a:53c:a200:bb54:3be5:c3d0:9ce5] has quit [Ping timeout: 260 seconds]
+00:59 -!- jonatack [~jon@37.170.253.61] has joined #bitcoin-core-dev
+01:04 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has joined #bitcoin-core-dev
+01:12 -!- DeanWeen [~dean@gateway/tor-sasl/deanguss] has joined #bitcoin-core-dev
+01:14 -!- Dean_Guss [~dean@gateway/tor-sasl/deanguss] has quit [Ping timeout: 240 seconds]
+01:28 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has joined #bitcoin-core-dev
+01:40 -!- emilengler [~emilengle@stratum0/entity/emilengler] has joined #bitcoin-core-dev
+01:53 -!- jonatack_ [~jon@37.167.18.204] has joined #bitcoin-core-dev
+01:56 -!- Talkless [~Talkless@hst-227-49.splius.lt] has quit [Read error: Connection reset by peer]
+01:57 -!- jonatack [~jon@37.170.253.61] has quit [Ping timeout: 256 seconds]
+01:57 -!- Talkless [~Talkless@hst-227-49.splius.lt] has joined #bitcoin-core-dev
+02:00 -!- Smaczny [~Smaczny@217.138.204.89] has quit []
+02:02 -!- jonatack_ [~jon@37.167.18.204] has quit [Quit: jonatack_]
+02:02 -!- jonatack [~jon@37.167.18.204] has joined #bitcoin-core-dev
+02:03 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has quit [Ping timeout: 260 seconds]
+02:05 -!- Pavlenex [~Thunderbi@141.98.103.251] has quit [Quit: Pavlenex]
+02:10 -!- timothy [~tredaelli@redhat/timothy] has joined #bitcoin-core-dev
+02:16 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has joined #bitcoin-core-dev
+02:17 -!- dfmb_ [~dfmb_@unaffiliated/dfmb/x-4009105] has joined #bitcoin-core-dev
+02:20 -!- Dieterbe [~Dieterbe@195.206.183.79] has joined #bitcoin-core-dev
+02:21 -!- Emcy [~Emcy@unaffiliated/emcy] has quit [Remote host closed the connection]
+02:21 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has quit [Ping timeout: 264 seconds]
+02:24 -!- Emcy [~Emcy@unaffiliated/emcy] has joined #bitcoin-core-dev
+02:32 -!- Talkless [~Talkless@hst-227-49.splius.lt] has quit [Read error: Connection reset by peer]
+02:33 -!- Talkless [~Talkless@hst-227-49.splius.lt] has joined #bitcoin-core-dev
+02:34 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has joined #bitcoin-core-dev
+02:51 -!- filchef [~filchef@212.104.97.177] has joined #bitcoin-core-dev
+02:52 -!- filchef [~filchef@212.104.97.177] has quit [Client Quit]
+03:03 -!- Ferne24Gaylord [~Ferne24Ga@static.57.1.216.95.clients.your-server.de] has joined #bitcoin-core-dev
+03:04 -!- kristapsk [~KK@gateway/tor-sasl/kristapsk] has quit [Remote host closed the connection]
+03:04 -!- kristapsk [~KK@gateway/tor-sasl/kristapsk] has joined #bitcoin-core-dev
+03:15 -!- yojoots [~justin@2600:1700:19e0:4b10:5047:d6fb:a52a:fe7f] has joined #bitcoin-core-dev
+03:16 -!- Pavlenex [~Thunderbi@141.98.103.251] has joined #bitcoin-core-dev
+03:16 -!- Pavlenex [~Thunderbi@141.98.103.251] has quit [Client Quit]
+03:16 -!- surja795 [~surja795@c-24-61-194-104.hsd1.ma.comcast.net] has joined #bitcoin-core-dev
+03:28 -!- Ferne24Gaylord [~Ferne24Ga@static.57.1.216.95.clients.your-server.de] has quit [Ping timeout: 246 seconds]
+03:29 -!- cnich [~cnich@d192-186-121-30.static.comm.cgocable.net] has quit [Quit: Leaving]
+03:41 -!- webchat__ [~514nDoG@gateway/tor-sasl/siandog] has joined #bitcoin-core-dev
+03:41 -!- SiAnDoG_ [~514nDoG@gateway/tor-sasl/siandog] has quit [Remote host closed the connection]
+03:51 -!- gio98 [~gmx98@88.147.10.97] has joined #bitcoin-core-dev
+03:56 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+03:56 < bitcoin-git> [bitcoin] MarcoFalke pushed 5 commits to master: https://github.com/bitcoin/bitcoin/compare/97b21b302a11...25ad2c623af3
+03:56 < bitcoin-git> bitcoin/master 691c817 Russell Yanofsky: Add util::Ref class as temporary alternative for c++17 std::any
+03:56 < bitcoin-git> bitcoin/master 6fca33b Russell Yanofsky: refactor: Pass NodeContext to RPC and REST methods through util::Ref
+03:56 < bitcoin-git> bitcoin/master ccb5059 Russell Yanofsky: scripted-diff: Remove g_rpc_node references
+03:56 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+03:56 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+03:56 < bitcoin-git> [bitcoin] MarcoFalke merged pull request #18740: Remove g_rpc_node global (master...pr/frpc) https://github.com/bitcoin/bitcoin/pull/18740
+03:56 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+03:58 -!- helo [~helo@unaffiliated/helo] has quit [Remote host closed the connection]
+04:09 -!- Talkless [~Talkless@hst-227-49.splius.lt] has quit [Read error: Connection reset by peer]
+04:10 -!- Talkless [~Talkless@hst-227-49.splius.lt] has joined #bitcoin-core-dev
+04:12 -!- timothy [~tredaelli@redhat/timothy] has quit [Remote host closed the connection]
+04:13 -!- Pavlenex [~Thunderbi@141.98.103.251] has joined #bitcoin-core-dev
+04:16 < wumpus> promag: I don't think rounding it makes sense, despite looking silly it's simply a JSON number invalid JSON number format, and JSON is not a presentation but interchange format
+04:16 < wumpus> invalid -> in valid
+04:16 < wumpus> if you want it to look nicer in some monitoring program, rounding it client-side is the way to go
+04:17 < wumpus> should we do a meeting today?
+04:19 -!- timothy [~tredaelli@redhat/timothy] has joined #bitcoin-core-dev
+04:19 < wumpus> (I don't mind, but at least here it's officially a free day due to Christian holiday)
+04:19 -!- DeanWeen [~dean@gateway/tor-sasl/deanguss] has quit [Ping timeout: 240 seconds]
+04:19 -!- Pavlenex [~Thunderbi@141.98.103.251] has quit [Ping timeout: 258 seconds]
+04:34 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has quit [Remote host closed the connection]
+04:35 -!- gio98 [~gmx98@88.147.10.97] has quit [Ping timeout: 246 seconds]
+04:53 -!- belcher [~belcher@unaffiliated/belcher] has joined #bitcoin-core-dev
+04:57 < fanquake> wumpus: I will be sleeping either way heh
+04:58 -!- gio98 [~gmx98@88.147.10.97] has joined #bitcoin-core-dev
+04:58 -!- jorijn [~jorijn@84-105-195-195.cable.dynamic.v4.ziggo.nl] has quit [Quit: ZNC 1.8.0 - https://znc.in]
+04:59 -!- jorijn [~jorijn@84-105-195-195.cable.dynamic.v4.ziggo.nl] has joined #bitcoin-core-dev
+05:00 -!- Dieterbe [~Dieterbe@195.206.183.79] has quit []
+05:12 -!- gio98 [~gmx98@88.147.10.97] has quit [Remote host closed the connection]
+05:12 < vasild> Has anybody tried to map code coverage reports with lines modified by a patch? To generate a report like "This PR modified 10 lines and from those 8 are covered and 2 are not".
+05:14 < wumpus> vasild: I don't think I've ever heard that idea before, it's kind of interesting!
+05:16 -!- Highway61 [~Thunderbi@107.182.234.161] has joined #bitcoin-core-dev
+05:18 < vasild> wumpus: it would help assess how much of the modified code is covered
+05:19 < vasild> => to write tests that cover the modifications
+05:20 -!- Stephnix [~Stephnix@37.120.203.188] has joined #bitcoin-core-dev
+05:27 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+05:27 < bitcoin-git> [bitcoin] hebasto reopened pull request #19029: net: Fix CThreadInterrupt::sleep_for TSan issues (master...200520-interrupts) https://github.com/bitcoin/bitcoin/pull/19029
+05:27 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+05:42 -!- troygiorshev [~troygiors@CPEdcef09a0ed55-CM0c473d74be00.cpe.net.cable.rogers.com] has joined #bitcoin-core-dev
+05:42 -!- fearbeag [~seanicide@clwdon2201w-lp130-08-70-49-29-22.dsl.bell.ca] has joined #bitcoin-core-dev
+05:49 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has joined #bitcoin-core-dev
+05:51 -!- emilengler [~emilengle@stratum0/entity/emilengler] has quit [Remote host closed the connection]
+06:02 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+06:02 < bitcoin-git> [bitcoin] MarcoFalke pushed 3 commits to master: https://github.com/bitcoin/bitcoin/compare/25ad2c623af3...cfe22a5f9e1d
+06:02 < bitcoin-git> bitcoin/master be01449 glowang: Add test for param interaction b/w -blocksonly and -whitelistforcerelay
+06:02 < bitcoin-git> bitcoin/master 0ea5d70 glowang: Updated comment for the condition where a transaction relay is denied
+06:02 < bitcoin-git> bitcoin/master cfe22a5 MarcoFalke: Merge #18530: Add test for -blocksonly and -whitelistforcerelay param inte...
+06:02 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+06:03 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+06:03 < bitcoin-git> [bitcoin] MarcoFalke merged pull request #18530: Add test for -blocksonly and -whitelistforcerelay param interaction (master...add_blocksonly_tests) https://github.com/bitcoin/bitcoin/pull/18530
+06:03 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+06:06 -!- sipa [~pw@gateway/tor-sasl/sipa1024] has quit [Remote host closed the connection]
+06:17 -!- sipa [~pw@gateway/tor-sasl/sipa1024] has joined #bitcoin-core-dev
+06:17 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has joined #bitcoin-core-dev
+06:21 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has quit [Ping timeout: 240 seconds]
+06:22 < jonatack> vasild: i've used https://coveralls.io in work and side projects (e.g. https://github.com/jonatack/cl-kraken) these past years...did you have another one in mind? 
+06:31 -!- DeanWeen [~dean@gateway/tor-sasl/deanguss] has joined #bitcoin-core-dev
+06:32 -!- lucaferr [~lucaferr@2a00:801:2d1:dd87:f176:545e:9d89:ff87] has joined #bitcoin-core-dev
+06:32 -!- lucaferr [~lucaferr@2a00:801:2d1:dd87:f176:545e:9d89:ff87] has quit [Remote host closed the connection]
+06:33 -!- lucaferr [~lucaferr@2a00:801:2d1:dd87:f176:545e:9d89:ff87] has joined #bitcoin-core-dev
+06:33 -!- owowo [~ovovo@unaffiliated/ovovo] has quit [Ping timeout: 256 seconds]
+06:33 -!- lucaferr [~lucaferr@2a00:801:2d1:dd87:f176:545e:9d89:ff87] has quit [Remote host closed the connection]
+06:40 < vasild> jonatack: I did not have anything in mind, other than I need that info to extend the coverage on a PR :)
+06:41 -!- owowo [~ovovo@unaffiliated/ovovo] has joined #bitcoin-core-dev
+06:44 -!- mdunnio [~mdunnio@208.59.170.5] has joined #bitcoin-core-dev
+06:50 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has joined #bitcoin-core-dev
+06:53 < vasild> Can coveralls.io do that?
+06:56 -!- lucaferr [~luca@m90-129-198-55.cust.tele2.se] has joined #bitcoin-core-dev
+07:02 < MarcoFalke> [15:13] <achow101> how do I run the travis lsan build locally?
+07:02 < MarcoFalke> See ci/Readme.md
+07:06 < jonatack> vasild: it should, see https://coveralls.io/features "Line by line coverage: Quickly browse through individual files that have changed in a new commit, and see exactly what changed in the build coverage line by line."
+07:07 < MarcoFalke> vasild: DrahtBot does that, but it is not yet public
+07:07 < jonatack> vasild: but ISTM that MarcoFalke has that already with his online coverage pages?
+07:07 < jonatack> MarcoFalke: oh ok, not surprised
+07:08 < MarcoFalke> Though, it is currently blocked on #[15:13] <achow101> how do I run the travis lsan build locally?
+07:08 < lucaferr> I'm trying to understand Compact Filters. In blockfilters.json are "[Prev Output Scripts for Block]" each supposed to match with the basic filter provided? I can't get them to match, although outputs from the same block do match the filter.
+07:08 < MarcoFalke> (wrong clipboard)
+07:08 < vasild> I think coveralls.io can do full report on a branch and then another full report on branch+commit.
+07:08 < MarcoFalke> #14343
+07:08 < gribble> https://github.com/bitcoin/bitcoin/issues/14343 | coverage reports non-deterministic · Issue #14343 · bitcoin/bitcoin · GitHub
+07:09 < MarcoFalke> You will have to do the diff manually for now
+07:10 < jonatack> vasild: it did for my use, it wasn't c++ but it likely can, yes
+07:10 < MarcoFalke> But I can tell DrahtBot to run on a pull to generate the raw data
+07:13 < vasild> "You will have to do the diff manually for now" -- so I have a full report on branch that is 100k+ lines, another full report on branch+commitX that is 100k+ lines and commitX that modifies e.g. 1000 lines.
+07:14 < vasild> I am now trying to do something locally, if that works, then it should be possible to teach some CI system to do it too (e.g. coveralls.io or another one).
+07:14 < MarcoFalke> Jup :( . Not sure how to solve that. But if you only modify net_processing, for exmple, you can probably discard coverage diffs in init.cpp or so
+07:15 < MarcoFalke> vasild: Nice. Let me know if you make progress :)
+07:15 < vasild> actually the full report on branch (before commitX) is not needed. My idea is to strip the report from branch+commitX to only the lines modified by commitX
+07:16 < MarcoFalke> That would exclude all side effects, no?
+07:17 < vasild> hmm :/
+07:17 -!- webchat__ [~514nDoG@gateway/tor-sasl/siandog] has quit [Remote host closed the connection]
+07:17 < MarcoFalke> For example a commit that restructures the validation interface might have a coverage effect on the wallet or the txindex 
+07:18 < vasild> right
+07:18 -!- SiAnDoG [~514nDoG@gateway/tor-sasl/siandog] has joined #bitcoin-core-dev
+07:18 < MarcoFalke> If you goal is to show coverage of the lines you modify in a patch (and they happen to have debug log statements, or otherwise show effects that can be tested), I recommend just writing a test to prove coverage
+07:19 -!- Relis [~Relis@85.255.235.163] has joined #bitcoin-core-dev
+07:20 < vasild> that is my goal, yes
+07:22 < MarcoFalke> but longer term we really need a way to automate this
+07:22 < MarcoFalke> One option could be to build a deterministic CPU to kill all non-determinism in the unit tests. Not sure if that is possible with qemu or rr
+07:23 -!- Relis [~Relis@85.255.235.163] has quit [Ping timeout: 246 seconds]
+07:26 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has joined #bitcoin-core-dev
+07:30 < vasild> Just run the tests on Windows where the OS random number generator is so flawed that it returns always the same numbers :-D
+07:30 < wumpus> what is non-deterministic about a CPU? (besides race conditions in threading)
+07:30 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has quit [Ping timeout: 240 seconds]
+07:31 < wumpus> for random instructions it should be as easy as 'don't use them', i guess, only use deterministic randomness in tests
+07:31 < vasild> is "if (GetMainSignals().CallbacksPending() > 10) {" mentioned in https://github.com/bitcoin/bitcoin/issues/14343#issuecomment-426916136 exactly that, "race conditions in threading"?
+07:32 < vasild> yeah, random number are easy to deal with
+07:32 < vasild> numbers
+07:32 < wumpus> the thing is, even if the CPU is determinstic, things such as I/O won't be
+07:33 < wumpus> even RAM might not be 100% deterministic (regarding timing)
+07:38 < MarcoFalke> Ok, then we also need deterministic RAM :)
+07:40 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has joined #bitcoin-core-dev
+07:43 < wumpus> heh
+07:43 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has quit [Client Quit]
+07:46 < lucaferr> Would it be possible to get the expanded uint64:s of the basic filter field as well as siphashed/fastranged values of the prev output scripts in the blockfilters.json?
+07:50 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has quit [Quit: My MacBook has gone to sleep. ZZZzzz…]
+07:56 < MarcoFalke> lucaferr: Not without modifying the rest interface. But why would you want to do that?
+07:57 < lucaferr> I'm just trying to build some code around it to better understand what is going on. My understanding is that all the prev output scripts should be encoded in the basic filter? However, I cannot get them to match the basic filter. Am I perhaps wrong in assuming that? It would be nice to see the decoded uint64:s from the golomb encoded bitstream, for verification...
+08:00 -!- Stephnix [~Stephnix@37.120.203.188] has quit []
+08:00 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has joined #bitcoin-core-dev
+08:00 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+08:00 < bitcoin-git> [bitcoin] MarcoFalke pushed 2 commits to master: https://github.com/bitcoin/bitcoin/compare/cfe22a5f9e1d...741816936441
+08:00 < bitcoin-git> bitcoin/master 4444dbf MarcoFalke: gui: Remove un-actionable TODO
+08:00 < bitcoin-git> bitcoin/master 7418169 MarcoFalke: Merge #18997: gui: Remove un-actionable TODO
+08:00 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+08:01 -!- Pavlenex [~Thunderbi@178.220.42.62] has joined #bitcoin-core-dev
+08:01 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+08:01 < bitcoin-git> [bitcoin] MarcoFalke merged pull request #18997: gui: Remove un-actionable TODO (master...2005-guiNoTodo) https://github.com/bitcoin/bitcoin/pull/18997
+08:01 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+08:02 -!- timothy [~tredaelli@redhat/timothy] has quit [Remote host closed the connection]
+08:02 < MarcoFalke> lucaferr: I suggest playing around with that in a unit test. They should be in ./src/test/blockfilter_tests or ./src/test/golomb_tests
+08:02 < lucaferr> MarcoFalke: thanks, I'll take a look
+08:07 < jnewbery> jonasschnelli: do you mind looking at #1896
+08:07 < gribble> https://github.com/bitcoin/bitcoin/issues/1896 | Translation update for 0.7.1 · Issue #1896 · bitcoin/bitcoin · GitHub
+08:08 < jnewbery> jonasschnelli: do you mind looking at #18960
+08:08 < gribble> https://github.com/bitcoin/bitcoin/issues/18960 | indexes: Add compact block filter headers cache by jnewbery · Pull Request #18960 · bitcoin/bitcoin · GitHub
+08:11 < jnewbery> I think it may be ready for merge (4 ACKs). You thought the last one might have been merged too soon quickly, so I want to make sure that there are no concerns about merging this one
+08:16 -!- timothy [~tredaelli@redhat/timothy] has joined #bitcoin-core-dev
+08:18 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has joined #bitcoin-core-dev
+08:20 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has quit [Ping timeout: 265 seconds]
+08:21 -!- aaronmcadam [~aaronmcad@185.189.112.27] has joined #bitcoin-core-dev
+08:23 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has quit [Remote host closed the connection]
+08:23 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has joined #bitcoin-core-dev
+08:28 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+08:28 < bitcoin-git> [bitcoin] laanwj pushed 2 commits to master: https://github.com/bitcoin/bitcoin/compare/741816936441...99e5e21b38bc
+08:28 < bitcoin-git> bitcoin/master fab908f MarcoFalke: test: Fix intermittent ETIMEDOUT on FreeBSD
+08:28 < bitcoin-git> bitcoin/master 99e5e21 Wladimir J. van der Laan: Merge #19023: test: Fix intermittent ETIMEDOUT on FreeBSD
+08:28 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+08:28 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+08:28 < bitcoin-git> [bitcoin] laanwj merged pull request #19023: test: Fix intermittent ETIMEDOUT on FreeBSD (master...2005-testFixIntermFreeBsdTimeout) https://github.com/bitcoin/bitcoin/pull/19023
+08:28 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+08:33 -!- jarthur [~jarthur@2605:6000:1019:4971:e924:f280:d055:e9ab] has joined #bitcoin-core-dev
+08:35 -!- jarthur [~jarthur@2605:6000:1019:4971:e924:f280:d055:e9ab] has quit [Remote host closed the connection]
+08:36 -!- jarthur [~jarthur@2605:6000:1019:4971:455e:6c99:f35b:5f1c] has joined #bitcoin-core-dev
+08:38 -!- mr_burdell [~mr_burdel@unaffiliated/mr-burdell/x-7609603] has quit [Ping timeout: 252 seconds]
+08:41 -!- mr_burdell [~mr_burdel@unaffiliated/mr-burdell/x-7609603] has joined #bitcoin-core-dev
+08:41 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has quit [Remote host closed the connection]
+08:41 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has joined #bitcoin-core-dev
+08:42 -!- setpill [~setpill@unaffiliated/setpill] has joined #bitcoin-core-dev
+08:44 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+08:44 < bitcoin-git> [bitcoin] laanwj pushed 2 commits to master: https://github.com/bitcoin/bitcoin/compare/99e5e21b38bc...fed1a9043fdf
+08:44 < bitcoin-git> bitcoin/master fa8bbb1 MarcoFalke: net: Use C++11 member initialization in protocol
+08:44 < bitcoin-git> bitcoin/master fed1a90 Wladimir J. van der Laan: Merge #19020: net: Use C++11 member initialization in protocol
+08:44 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+08:45 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+08:45 < bitcoin-git> [bitcoin] laanwj merged pull request #19020: net: Use C++11 member initialization in protocol (master...2005-netCxx11MemberInit) https://github.com/bitcoin/bitcoin/pull/19020
+08:45 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+08:49 -!- jarthur [~jarthur@2605:6000:1019:4971:455e:6c99:f35b:5f1c] has quit []
+08:53 -!- Pavlenex [~Thunderbi@178.220.42.62] has quit [Quit: Pavlenex]
+08:56 -!- justanotheruser [~justanoth@unaffiliated/justanotheruser] has quit [Ping timeout: 260 seconds]
+08:58 -!- ghost43 [~daer@gateway/tor-sasl/daer] has joined #bitcoin-core-dev
+09:02 -!- setpill [~setpill@unaffiliated/setpill] has quit [Quit: o/]
+09:11 -!- justanotheruser [~justanoth@unaffiliated/justanotheruser] has joined #bitcoin-core-dev
+09:20 -!- vasild_ [~vd@gateway/tor-sasl/vasild] has joined #bitcoin-core-dev
+09:23 -!- vasild [~vd@gateway/tor-sasl/vasild] has quit [Ping timeout: 240 seconds]
+09:23 -!- vasild_ is now known as vasild
+09:30 -!- Relis [~Relis@85.255.232.252] has joined #bitcoin-core-dev
+09:30 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has quit [Remote host closed the connection]
+09:34 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+09:34 < bitcoin-git> [bitcoin] MarcoFalke opened pull request #19041: ci: tsan with -stdlib=libc++ (master...2005-ciTsanFix) https://github.com/bitcoin/bitcoin/pull/19041
+09:34 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+09:40 -!- IGHOR [~quassel@93.178.216.72] has quit [Quit: http://quassel-irc.org ? ??????????? ?????????. ????-??.]
+09:44 -!- _Sam-- [~sam@unaffiliated/greybits] has joined #bitcoin-core-dev
+09:45 -!- theStack [~honeybadg@vps1648322.vs.webtropia-customer.com] has joined #bitcoin-core-dev
+09:47 -!- timothy [~tredaelli@redhat/timothy] has quit [Quit: Konversation terminated!]
+09:47 -!- IGHOR [~quassel@93.178.216.72] has joined #bitcoin-core-dev
+09:48 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+09:49 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has joined #bitcoin-core-dev
+09:59 -!- emilengler [~emilengle@stratum0/entity/emilengler] has joined #bitcoin-core-dev
+10:02 -!- jarthur [~jarthur@2605:6000:1019:4971:1d31:2650:73e1:8cd7] has joined #bitcoin-core-dev
+10:14 -!- Pavlenex [~Thunderbi@141.98.103.251] has joined #bitcoin-core-dev
+10:14 -!- Pavlenex [~Thunderbi@141.98.103.251] has quit [Client Quit]
+10:21 -!- ironhelix [~d@193.56.117.93] has joined #bitcoin-core-dev
+10:26 -!- kristapsk [~KK@gateway/tor-sasl/kristapsk] has quit [Remote host closed the connection]
+10:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+10:35 < bitcoin-git> [bitcoin] laanwj pushed 2 commits to master: https://github.com/bitcoin/bitcoin/compare/fed1a9043fdf...4479eb04d928
+10:35 < bitcoin-git> bitcoin/master 0187d4c John Newbery: [indexes] Add compact block filter headers cache
+10:35 < bitcoin-git> bitcoin/master 4479eb0 Wladimir J. van der Laan: Merge #18960: indexes: Add compact block filter headers cache
+10:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+10:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+10:35 < bitcoin-git> [bitcoin] laanwj merged pull request #18960: indexes: Add compact block filter headers cache (master...2020-05-cfcheckpts-cache) https://github.com/bitcoin/bitcoin/pull/18960
+10:35 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+10:45 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has quit [Remote host closed the connection]
+10:47 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has quit [Remote host closed the connection]
+10:47 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has joined #bitcoin-core-dev
+10:58 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has joined #bitcoin-core-dev
+10:59 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has quit [Client Quit]
+11:00 -!- aaronmcadam [~aaronmcad@185.189.112.27] has quit []
+11:02 < wumpus> PSA bitcoin-acks has a repository in the bitcoincore organization now: https://github.com/bitcoin-core/bitcoin-acks @ jonatack pierre_rochard 
+11:05 -!- kristapsk [~KK@gateway/tor-sasl/kristapsk] has joined #bitcoin-core-dev
+11:05 < pierre_rochard> Thank you wumpus!
+11:07 < theStack> that's great news! i wondered recently what happened to bitcoin-acks.com
+11:07 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has joined #bitcoin-core-dev
+11:09 < theStack> i think jonatack proposed to run it on bitcoin.org recently if i remember correctly; any plans about that? or is the idea that people spin it up locally? (should also be quite easy thanks to docker)
+11:11 < wumpus> pierre_rochard: yw, thanks for creating it in the first place!
+11:12 < wumpus> theStack: i think it should be back up
+11:14 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has quit [Ping timeout: 272 seconds]
+11:14 < theStack> wumpus: ah, indeed! i just mistyped... it's without the dash, i.e. bitcoinacks.com
+11:16 < wumpus> right the repository has a dash but the site doesn't :)
+11:18 -!- Pavlenex [~Thunderbi@141.98.103.251] has joined #bitcoin-core-dev
+11:22 -!- mshadle1 [~mshadle@195.206.169.238] has joined #bitcoin-core-dev
+11:22 -!- andrewtoth [~andrewtot@gateway/tor-sasl/andrewtoth] has quit [Ping timeout: 240 seconds]
+11:26 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Remote host closed the connection]
+11:26 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+11:28 -!- Pavlenex [~Thunderbi@141.98.103.251] has quit [Quit: Pavlenex]
+11:29 -!- proofofk_ [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+11:29 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Read error: Connection reset by peer]
+11:31 < luke-jr> theStack: you mean bitcoincore.org?
+11:33 -!- Pavlenex [~Thunderbi@141.98.103.251] has joined #bitcoin-core-dev
+11:34 -!- proofofk_ [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Ping timeout: 265 seconds]
+11:35 < wumpus> probably; but bitcoincore.org itself only hosts static content, it would be possible to host it as a subdomain but the original domain is better 
+11:39 < jonatack> theStack: luke-jr: i proposed to bring bitcoinacks, with pierre_rochard's permission, into https://github.com/bitcoin-core/ to see more attention
+11:40 < jonatack> http://www.erisian.com.au/bitcoin-core-dev/log-2020-05-15.html#l-383
+11:43 < theStack> luke-jr: yes indeed; bitcoin.org is not under the control of the core devs now i guess?
+11:44 < achow101> theStack: it never really was
+11:44 < theStack> wumpus: agreed that the original domain is good
+11:45 < theStack> jonatack: great initiative! will for sure use it (and maybe in the course of that even contribute) for reviewing
+11:46 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has quit [Remote host closed the connection]
+11:49 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has joined #bitcoin-core-dev
+11:50 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+11:50 < bitcoin-git> [bitcoin] laanwj pushed 4 commits to master: https://github.com/bitcoin/bitcoin/compare/4479eb04d928...9abed46871a7
+11:50 < bitcoin-git> bitcoin/master a8334f7 Andrew Chow: Read and write a checksum for encrypted keys
+11:50 < bitcoin-git> bitcoin/master c9a9ddb Andrew Chow: Set fDecryptionThoroughlyChecked based on whether crypted key checksums ar...
+11:50 < bitcoin-git> bitcoin/master d67055e Andrew Chow: Upgrade or rewrite encrypted key checksums
+11:51 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+11:51 < jonatack> the
+11:52 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+11:52 < bitcoin-git> [bitcoin] laanwj merged pull request #16946: wallet: include a checksum of encrypted private keys (master...wallet-enckey-checksum) https://github.com/bitcoin/bitcoin/pull/16946
+11:52 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+11:52 < jonatack> theStack: 👍
+11:55 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has quit [Ping timeout: 256 seconds]
+11:59 -!- ghost43 [~daer@gateway/tor-sasl/daer] has quit [Remote host closed the connection]
+12:00 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has joined #bitcoin-core-dev
+12:00 -!- d_t [~dt@108-65-77-11.lightspeed.sntcca.sbcglobal.net] has quit [Client Quit]
+12:01 < wumpus> #startmeeting
+12:01 < lightningbot> Meeting started Thu May 21 19:01:19 2020 UTC.  The chair is wumpus. Information about MeetBot at http://wiki.debian.org/MeetBot.
+12:01 < lightningbot> Useful Commands: #action #agreed #help #info #idea #link #topic.
+12:01 < jnewbery> hi
+12:01 < kanzure> hi
+12:01 < jeremyrubin> hi
+12:01 < wumpus> let's try...
+12:01 < jkczyz> hi
+12:01 < achow101> hi
+12:01 < fjahr> hi
+12:01 < ariard> hi
+12:01 < wumpus> #bitcoin-core-dev Meeting: wumpus sipa gmaxwell jonasschnelli morcos luke-jr sdaftuar jtimon cfields petertodd kanzure bluematt instagibbs phantomcircuit codeshark michagogo marcofalke paveljanik NicolasDorier jl2012 achow101 meshcollider jnewbery maaku fanquake promag provoostenator aj Chris_Stewart_5 dongcarl gwillen jamesob ken281221 ryanofsky gleb moneyball kvaciral ariard digi_james amiti fjahr
+12:01 < jonatack> late night hi
+12:01 < wumpus> jeremyrubin lightlike emilengler jonatack hebasto jb55 elichai2
+12:01 -!- ghost43 [~daer@gateway/tor-sasl/daer] has joined #bitcoin-core-dev
+12:02 < hebasto> hi
+12:02 < elichai2> Hi 
+12:02 < wumpus> one proposed meeting topic: alternative transports support (ariard)
+12:02 < ariard> yes!
+12:02 < instagibbs> hi
+12:02 < wumpus> any last minute proposals?
+12:02 < amiti> hi
+12:02 < meshcollider> hi
+12:03 < wumpus> okay, let's start with high priority for review as usual
+12:03 < wumpus> #topic High priority for review
+12:03 < luke-jr> hi
+12:03 < aj> hi
+12:03 < hebasto> could #18297 be added to hi-prio?
+12:04 < gribble> https://github.com/bitcoin/bitcoin/issues/18297 | build: Use pkg-config in BITCOIN_QT_CONFIGURE for all hosts including Windows by hebasto · Pull Request #18297 · bitcoin/bitcoin · GitHub
+12:04 < wumpus> https://github.com/bitcoin/bitcoin/projects/8  4 blockers, 1 bugfix, 4 chasing concept ACK
+12:04 < wumpus> hebasto: yes
+12:04 < hebasto> wumpus: thanks
+12:05 < achow101> #18787 for hi prio
+12:05 < gribble> https://github.com/bitcoin/bitcoin/issues/18787 | wallet: descriptor wallet release notes and cleanups by achow101 · Pull Request #18787 · bitcoin/bitcoin · GitHub
+12:05 < wumpus> achow101: added
+12:07 < wumpus> #topic Alternative transports support (ariard)
+12:07 < wumpus> #18989
+12:07 < gribble> https://github.com/bitcoin/bitcoin/issues/18989 | Towards alternative transports first-class support · Issue #18989 · bitcoin/bitcoin · GitHub
+12:07 < ariard> Okay so I've explored a bit alternative transports support
+12:08 < ariard> as it has been previously attempted by Matt with headers-over-radio or headers-over-DNS
+12:08 < wumpus> is there anything special needed at our side with regard to that?
+12:08 -!- jarthur_ [~jarthur@2605:6000:1019:4971:a883:d79f:60e6:1cd3] has joined #bitcoin-core-dev
+12:08 < ariard> well I want to assert project worthiness 
+12:08 < luke-jr> there's also Blockstream's blocks-over-satellite
+12:08 < wumpus> couldn't any extenal software route the P2P port over some other transport?
+12:08 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+12:09 < ariard> yes but idea is to increase easiness of link layer diversity
+12:09 < ariard> wumpus: you may want to receive blocks on one transport like satellites and broadcast them over another medium
+12:09 < wumpus> while I think alternative transports are great, I don't think we should integrate the code for all the transports into bitcoin core
+12:10 < wumpus> I didn't read your proposal yet so I might be off
+12:10 < ariard> wumpus: I agree that's why my proposal is splitting drivers from fetching logic
+12:10 < ariard> It's just a generic driver framework
+12:10 < sipa> but the drivers would things you compile in?
+12:10 < ariard> drivers should obviously lay outside of core
+12:10 < sipa> or external applications?
+12:10 < wumpus> if it's external applications that's great
+12:10 < sipa> (even if not maintained in our repository)
+12:11 < ariard> sipa: compile in or external applications like meek or snowflake
+12:11 < jb55> why do we integrate tor then
+12:11 < ariard> yes I don't want them to be maintained in the repo
+12:11 < sipa> jb55: i think there is a difference between routing and non-routing transports
+12:11 < wumpus> jb55: historical legacy, as well as being the most popular one probably
+12:11 < ariard> jb55: with regards to their pluggable transports
+12:12 < sipa> i think the things ariard is thinking about doesn't have addresses or a way to initiate a connection to a particular peer
+12:12 < ariard> wumpus: it's the most popuplar one ofc, but their threat model is a bit diffrent than our
+12:12 < luke-jr> we don't integrate tor really
+12:12 < luke-jr> we just have bits to interoperate with it
+12:12 < ariard> sipa: yes peer policy would be left to the driver
+12:12 < sipa> but just a "i have a way to connect to some other node, please communicate through it"
+12:12 -!- jarthur [~jarthur@2605:6000:1019:4971:1d31:2650:73e1:8cd7] has quit [Ping timeout: 260 seconds]
+12:12 -!- Guest44696 [33448e8d@141.ip-51-68-142.eu] has joined #bitcoin-core-dev
+12:12 < wumpus> that makes sense
+12:12 < ariard> like if your alternative transport is a satellite, there is no that much peer
+12:13 < sipa> so this would be outside addrman, addr (or addrv2) messages, ...
+12:13 < ariard> also you may receive block from an uni-directional channel but want to broadcast tx over another one
+12:13 < wumpus> yes, I agree that could be facilitatd better
+12:13 < ariard> in reaction to this
+12:13 < ariard> sipa: yes not melding with addrman 
+12:13 < wumpus> maybe through hints in a special-permissioned P2P connection
+12:13 < ariard> sipa: you may reuse addr messages but that's up to driver
+12:13 -!- Guest44696 [33448e8d@141.ip-51-68-142.eu] has quit [Remote host closed the connection]
+12:13 < luke-jr> p2p stuff needs Core-side integration ofc
+12:14 < luke-jr> well, maybe not
+12:14 < wumpus> yes, in a sense
+12:14 < ariard> luke-jr: may you precise ?
+12:14 < luke-jr> I guess they can do their own addr-equivalent messages on their own transport
+12:14 < sipa> i'm not sure what the best way to support such things is... on the face of it, it could all be done as an external application talking P2P
+12:14 < sipa> but there may be easier ways of integrating
+12:14 < fjahr> ariard: have users expressed interest in any specific alternative transports? which one would have the most interest in the beginning do you think?
+12:15 < ariard> sipa: like a supplemental daemon supporting all drivers ?
+12:15 < sipa> fibre-like things are harder, as they need mempool access
+12:15 -!- jarthur_ [~jarthur@2605:6000:1019:4971:a883:d79f:60e6:1cd3] has quit []
+12:15 < luke-jr> would be ideal to split out current p2p stuff external someday too
+12:15 < sipa> ariard: or one daemon per driver
+12:15 < wumpus> what we're not going to do: include it all into the repository, or dynamic library based plugin mechanisms
+12:15 < sipa> wumpus: agree
+12:15 -!- Talkless [~Talkless@hst-227-49.splius.lt] has quit [Quit: Konversation terminated!]
+12:15 < ariard> fjahr: yes some LN routing nodes operators would like block redundancy
+12:15 < wumpus> everything else is fine
+12:16 < ariard> sipa: yes you may have one daemon per driver but ideally you may react on what your learn one driver
+12:16 < sipa> i can't parse your sentence
+12:16 -!- IGHOR [~quassel@93.178.216.72] has quit [Quit: http://quassel-irc.org ? ??????????? ?????????. ????-??.]
+12:16 < wumpus> if it runs in an external process and communicates with bitcoin core that's the right way
+12:16 < ariard> wumpus: yes agree doesn't make sense to include it all into the repo
+12:17 -!- jonatack_ [~jon@184.75.221.203] has joined #bitcoin-core-dev
+12:17 < wumpus> if it requires a little extra support on our side that's ok
+12:17 < jb55> for tor it just connects to a local proxy socket right? isn't this general enough?
+12:17 < jeremyrubin> What about making our P2P function that way wumpus?
+12:17 < wumpus> jb55: yes, there's a little specificsupport for incoming connections by creating a hidden service
+12:17 < ariard> sipa: let's say I learn I'm currently eclipsed, I send a notification to my LN daemon, LN daemon react by closing channnel and broadcast through some emergency channel 
+12:17 < sipa> jb55: that wouldn't work for a satellite connection for example
+12:18 < jeremyrubin> I mean it seems like a silly suggestion but if we want fully capable alt-p2ps, then we should be able to dogfood it with our current p2p system
+12:18 < wumpus> jeremyrubin: in the long run maybe
+12:18 < sipa> jb55: as you can't route a bidirectional byte stream
+12:18 < jb55> sipa: satellite would require custom deserialization code as well if I understand correctly
+12:18 -!- jonatack [~jon@37.167.18.204] has quit [Ping timeout: 256 seconds]
+12:18 < ariard> jeremyrubin: ideally but that's too much carefull refactor
+12:18 < jeremyrubin> wumpus: also seems good from a security perspective -- no DMA if you pop the transit layer :)
+12:19 < jeremyrubin> I think ryanofsky probably has some insight here
+12:19 < jeremyrubin> Don't you have a seperate network process branch right now?
+12:19 < jeremyrubin> Or is it just wallet stuff presently 
+12:19 < ariard> better integration with core would ease deployement therefore making the number of such alternative transport used higher
+12:19 < wumpus> jeremyrubin: yes, gmaxwell had some ideas in that direction as well, run the whole P2P in a sandboxed process
+12:19 < sipa> if one goal is supporting FIBRE in an external process... that's pretty hard; i think the reconstruction code needs low latency access to the mempool etc
+12:19 < ariard> and this would increase network security
+12:20 < ariard> sipa: fibre is so much special, not in my integration target
+12:20 < sipa> ariard: ok
+12:20 < ariard> I'm more interesred by headers-over-DNS or domain-fronting or radio integration
+12:20 < wumpus> let's aim lower first ...
+12:20 < jeremyrubin> sipa: IPC shared memeory the mempool for fibre?
+12:20  * jeremyrubin ducks
+12:20 < sipa> that's fair
+12:20 < wumpus> it coudl always be extended later
+12:20 < wumpus> to way-out ideas like that
+12:20 < ariard> yes I want something simple first, like headers-over-DNS
+12:20 < jb55> what's the simplest non-invasive use case?
+12:21 < sipa> ariard: headers-over-DNS could even just done with RPC, i think?
+12:21 < wumpus> nothgin is going to happen at all if that's a requirement for the first version though :)
+12:21 < sipa> (a daemon communicating through RPC)
+12:21 < wumpus> memmap the mempool lol :)
+12:21 < ariard> sipa: yes my concern is if you have to manage one daemon per alternative transport that's a bit cumbersome to deploy
+12:21 -!- Pavlenex [~Thunderbi@141.98.103.251] has quit [Quit: Pavlenex]
+12:22 < ariard> even for power users
+12:22 -!- IGHOR [~quassel@93.178.216.72] has joined #bitcoin-core-dev
+12:22 < ariard> I want to explore if we can integrate with multiprocess and just have another new process supporting the drivers
+12:22 < sipa> ariard: compared to c-lightning which is already half a dozen daemons? ;)
+12:23 -!- IGHOR [~quassel@93.178.216.72] has quit [Client Quit]
+12:23 < ariard> sipa: I know it doesn't work well for embedded or mobile envs
+12:23 -!- jonatack_ [~jon@184.75.221.203] has quit [Quit: jonatack_]
+12:24 -!- jonatack [~jon@2a01:e0a:53c:a200:bb54:3be5:c3d0:9ce5] has joined #bitcoin-core-dev
+12:24 < wumpus> why not?
+12:24 < ariard> and I think actually blocksat is its own fork of core 
+12:24 < wumpus> on limited 32-bit platforms it's usually better to have a zillion separate processes than threads within the same process
+12:25 < wumpus> e.g. at least they don't have to share an address space
+12:25 < ariard> well actually with my driver interface design if you want to fork() behind you can
+12:25 < ryanofsky> sipa/wumpus is there quick way to say what you don't like about the shared library approach? build complications? memory safety?
+12:25 < ariard> it's up to the driver implementation
+12:26 < wumpus> ryanofsky: security, limits static linking, and having to provide a binary interface
+12:26 < wumpus> also cross platform stuf
+12:27 < wumpus> dynamic libraries are slightly but different enough to make your life a pain between windows and linux
+12:27 < ariard> wumpus: on security/fault-tolerance that's why I think a separate process would be better
+12:27 < wumpus> yes, it is
+12:27 < ariard> contrary to Matt stuff spawning new threads
+12:27 < wumpus> separate processes are better for isolation/security
+12:27 < ariard> now what should be the threading model of such new process it's another question
+12:27 < ariard> wumpus: agree
+12:28 < ariard> but current proposal is just to have fetching/broadcast logic in this new process and talk to a driver interface
+12:29 < ryanofsky> ariard, i'll take a look at your prs and what the interfaces are. i'd expect they are easy just to get working across processes
+12:29 < ariard> fetching logic is operating over abstract driver attributes like fHeaders or fBlocks
+12:29 < wumpus> that's interesting, I'll read the issue more closely
+12:29 -!- IGHOR [~quassel@93.178.216.72] has joined #bitcoin-core-dev
+12:29 < ryanofsky> the issue is just performance, it's a easier to have great performance if you aren't doing io and just accessing memory
+12:29 < ariard> wumpus: yes I want to rely drivers devs to write their own fetching logic for each transport
+12:29 < BlueMatt> ariard: i think it may be useful for you to take a look at all the rust-based drivers that I had written
+12:30 < BlueMatt> ariard: I think the current API design in 18988 is much too tied to certain assumptions about what the thing will look like
+12:30 < wumpus> bitcoin core is I/O bound but usually only on disk, not on P2P/network
+12:30 < ariard> BlueMatt: I know, I need to rework the threading model, but ideally your rust-based drivers should be reused
+12:30 < BlueMatt> ariard: I dont think the threading model is the only issue there
+12:30 < BlueMatt> i think it needs to be way more free-form
+12:31 < BlueMatt> eg the rust stuff was just exposing ProcessNewBlock(Headers) and FindNextBlocksToDownload
+12:31 < BlueMatt> as well as an api to get header state
+12:31 < ariard> BlueMatt: more asynchronous ?
+12:31 < BlueMatt> and leaving it up to the driver what to do with that
+12:31 < BlueMatt> cause drivers may have very different capabilities in terms of how to query
+12:31 < sipa> i guess that's a question of layering
+12:31 < ryanofsky> BlueMatt, is starting with an API and just changing over time hard here? it seems like a brand new API you can declare unstable
+12:32 < BlueMatt> eg headers-over-dns may only be able to query by block height, and its a poll, its not a file descriptor or a socket.
+12:32 < sipa> it does make sense to have a "i have a bidirection byte stream connection to another node... tell me what to route over it" interface
+12:32 < BlueMatt> ryanofsky: I'm suggesting start with less api, and add more over time :)
+12:32 < sipa> but it's not the right solution for everything
+12:32 < BlueMatt> i dont think its the right solution for...almost anything we'd want to do here?
+12:32 < BlueMatt> like, some of the most exciting options would be https domain fronting
+12:32 < BlueMatt> and its not a byte stream, its a query interface
+12:33 < sipa> what is https domain fronting?
+12:33 < ariard> yes that's why fetching logic should adapt its request to driver capabilities
+12:33 < ariard> like don't send GETHEADERS if it's unidirectional
+12:33 < ariard> sipa: https://www.bamsoftware.com/papers/fronting/
+12:33 < BlueMatt> sipa: where you hit commoncdn.amazon.com in SNI, but the http host header is magicbitcoinproxy.amazonuser.com
+12:33 < sipa> SNI?
+12:33 -!- fearbeag [~seanicide@clwdon2201w-lp130-08-70-49-29-22.dsl.bell.ca] has quit [Quit: Leaving]
+12:34 < BlueMatt> sipa: and it routes to your domain. this is a *functional* way to connect to tor through the gfw still today, last i heard, though the common endpoint is slow
+12:34 < BlueMatt> sipa: ssl plaintext hostname in the connection setup
+12:34 < ariard> sipa: https://en.wikipedia.org/wiki/Server_Name_Indication
+12:34 < sipa> i'll read the link
+12:34 < sipa> no need to unnoob be here
+12:35 < BlueMatt> ariard: i dont even think 'bidirectional' is a reasonable assumption here - eg radio-based stuff is likely to be unidirectional
+12:35 < BlueMatt> (and could be *either* read or write)
+12:35 < ariard> yes censorship circumvention is a huge topic in itself, and some of Tor stuff may not fit your threat model
+12:35 < jnewbery> if it's possible to unnoob the rest of us in a sentence or two, that might be helpful though
+12:35 < ariard> BlueMatt: yes capabilities need refinement
+12:35 < ryanofsky> jnewbery, it's just a string passed to disambiguate when you have web servers for different domains on the same ip
+12:36 < jb55> jnewbery: its like the http Host header for tls connections
+12:36 < BlueMatt> jnewbery: tl;dr: a way to connect to a super common https endpoint (so common that any censors wont block it cause they'd break many websites) and then route your own data over it
+12:36 < sipa> i feel people are trying to explain minor details while i (or some) are missing the big picture
+12:36 < BlueMatt> think of, eg, amazon aws javascript cache
+12:36 -!- Livestradamus [~quassel@unaffiliated/livestradamus] has quit [Quit: I'm out.]
+12:37 < BlueMatt> but you magically make the censor think you're connecting to that but are in fact connecting to a bitcoin core reset endpoint
+12:37 < sipa> i hear "something something https bypass GFW", but not what or how that'd be used
+12:37 < ariard> sipa: agree there is a lot of alternative transports, integration with each of them may bring you more security/privacy
+12:37 -!- Livestradamus [~quassel@unaffiliated/livestradamus] has joined #bitcoin-core-dev
+12:37 < ariard> therefore making them easier to deploy would be great
+12:37 < jeremyrubin> ariard: or less as you add more too
+12:37 < ryanofsky> i think big picture is it's harder to censor an ip when it's an amazon ip also hosting things you're not trying to censor
+12:37 < sipa> ryanofsky: ok, that's helpful!
+12:38 < sipa> why is it unidirectional?
+12:38 < ariard> jeremyrubin: there is a risk of privacy leakage, it should be well-documented I agree
+12:38 < jnewbery> Very helpful. Thanks ryanofsky jb55 BlueMatt
+12:39 < ariard> domain-fronting increase cost of censorship, because now you have to harm ingenous traffic too
+12:39 < instagibbs> Signal uses this IIRC
+12:39 < jb55> could I use altnet to send a tx via carrier pidgin
+12:40 < BlueMatt> its been very effecive for signal, in fact
+12:40 < ariard> but sipa was right, we miss the bigger picture, I would be glad to explain domain-fronting or how we may incorporate it in core in a pr review club session or other
+12:40 < instagibbs> BlueMatt, AWS got mad at them didn't hear the result of it :P
+12:40 < BlueMatt> instagibbs: the result was to use azure
+12:40 < BlueMatt> who did not get mad
+12:40 < sipa> jb55: using pidgin to steganographically hide the traffic is a great idea!
+12:40 < instagibbs> Ahhh
+12:40 < BlueMatt> (yet)
+12:40 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Ping timeout: 265 seconds]
+12:40 < wumpus> hehe
+12:40 < jb55> pigeon*
+12:41 < instagibbs> But indeed, seems to work inside China quite well considering 
+12:41 < ariard> yes if we have such generic driver framework, drivers devs may just focus on improving protocol fingerprint hidding
+12:42 < BlueMatt> exactly. but it needs to be super flexible to support all these different crazy ideas
+12:43 < wumpus> but not necessarily initially, it just needs to be extendable
+12:43 < ariard> I invite anyone to let comment on the PR/issues and in the meanwhile I will explore more each alt-transports to see how much generic framework
+12:43 < ariard> and come with a cleaner design proposal
+12:43 < jnewbery> ariard: what do you need help with? From my perspective, there's still a lot of work to be done internally in Bitcoin Core cleaning up the layer separation between net / net_processing / validation, but I haven't reviewed your branch yet
+12:43  * BlueMatt notes that, after initialization, before any read()/write()s to the remote host, openssl can be run in a sanboxed processes which has no access to any syscalls except read() and write() :)
+12:44 < sipa> maybe it's good to make a list of potential alternative transport that are useful, and then see if there's a reasonable subset that can easily be supported
+12:44 < wumpus> you don't want to overdesign either, nor make such a large stack of requirements that you give up in the idea
+12:44 < ariard> sipa: I've been working on this the last few days, will make it public soon
+12:44 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+12:44 < ariard> wumpus: you don't want to overdesign, but let room in the design to step-by-step extend it
+12:44 < BlueMatt> jnewbery: these types of things need only very few calls into the rest of core
+12:44 < wumpus> ariard: yes
+12:45 < BlueMatt> eg you can write dns + http + radio + a full second p2p client with only these functions: https://github.com/TheBlueMatt/bitcoin/blob/d3ca09afbc38d7f73866da33948651ac2c40fd58/src/rusty/src/cpp_bridge.cpp
+12:45 -!- ransua [6da684fd@109.166.132.253] has joined #bitcoin-core-dev
+12:45 < ariard> jnewbery: the kind of changes Carl is working on to separate net_processing from validation
+12:45 < BlueMatt> (and that branch has all 4 written, though in rust)
+12:45 < wumpus> just trying to warn to not get overenthousiastic I've seen this before :)
+12:45 < BlueMatt> so I really dont think separating or cleaning up net_processing is at all required here
+12:45 < BlueMatt> in fact, I think using any parts of net_processing or even net is an anti-goal.
+12:45  * jeremyrubin excited for audio relay so I can fill my neighborhood with the glorious sound of decentralization
+12:45 < ariard> wumpus: I agree, that's kind of slow work like multiprocess is 
+12:45 < wumpus> jeremyrubin: ROFL
+12:45 < BlueMatt> and validation.h is a relatively small API
+12:46 < ariard> I'm well aware of
+12:46 < wumpus> i'm stoked for neutrino relay, uncensorable by physics !
+12:46 < sipa> "it's faster than C!"
+12:47 < BlueMatt> lol
+12:47 < wumpus> hehe
+12:47 < ariard> jeremyrubin: receives block from space and pass headers-over-radio to your neighboors, be a good network citizen :)
+12:47  * BlueMatt is excited for cross-ocean global radio header relay
+12:47 < wumpus> that would be very nice
+12:47 < BlueMatt> cause, like, some issues with using spectrum without pissing off a bunch of hams aside, is totally practical
+12:48 < jeremyrubin> I'd just be worried that if we set up neutrino relay that we'd start getting extraterrestrial blocks
+12:48 < sipa> 800 bytes per 10 minutes is slightly higher than 1 bit per second
+12:48 < wumpus> jeremyrubin: win/win
+12:48 < sipa> i wonder how much energy you need to moonbounce that
+12:48 < ariard> if anyone has idea of alternarive transport pleae note them in the issue, I will inquiry to see how you can integrate
+12:48 < BlueMatt> sipa: ha! I was having a conversation about moonbouncing header relay like an hour ago
+12:48 < BlueMatt> ariard: I just have the 4 that I listed previously, all of which I think are cool.
+12:48 < jeremyrubin> How many TXs can we fit in the latency between here and the moon?
+12:49 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Remote host closed the connection]
+12:49 < BlueMatt> (and sufficiently variable in the features they offer that they are a good test case)
+12:49 < jeremyrubin> MoonMemPoolTapeDeck
+12:49 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+12:49 < ariard> BlueMatt: cooool will go through this whole conv again to bookmark
+12:49 < ariard> oh in fact i've already you branch bookmarked :) the doc starter is nice
+12:49 < BlueMatt> ariard: also take a look at the fn list at https://github.com/TheBlueMatt/bitcoin/blob/d3ca09afbc38d7f73866da33948651ac2c40fd58/src/rusty/src/cpp_bridge.cpp or the actual api at https://github.com/TheBlueMatt/bitcoin/blob/d3ca09afbc38d7f73866da33948651ac2c40fd58/src/rusty/src/bridge.rs
+12:50 < BlueMatt> thats the api that I was exposing to all 4 clients in rust, and was pretty easy to write again. its not a class-based thing, just a bag of functions, though, so not quite what you're going for.
+12:50 < ariard> okay I've had a different concern, if such stuff get wider deployement we may have side-effect on the network topology
+12:50 < BlueMatt> in other news, these things are back in stock, and can be used to pick up headers most places in new york city: https://unsigned.io/product/rnode/
+12:50 < ariard> anyone has opinion on this ?
+12:51 < BlueMatt> ariard: as long as its purely additive, who cares! :)
+12:51 < ariard> and such side-effect may not be desirable
+12:51 < jonatack> ariard: at the risk of stating the obvious (but that is often forgotten in the excitement): restrict scope inititally to the smallest possible, minimum viable thing, that can be reviewed and that people can/will actually use on a small scale but eagerly
+12:51 < ariard> BlueMatt: right if everything is opt-in I think that's okay
+12:51 < jeremyrubin> I don't think it's addititive
+12:51 < BlueMatt> (one of the key observations made previously is that these types of relays can be bucketed into a few categories: a) privacy preserving ones, often which only provide headers due to bandwidth constraints, and b) not that...)
+12:51 < ariard> jonatack: I know review process and getting the first chunks PRs are the hardest steps :)
+12:52 < jeremyrubin> This increases partitionability 
+12:52 < jeremyrubin> but increases availability I think?
+12:52 < BlueMatt> in such cases, we can use (a)-category sources to detect when there are blocks we dont have, and turn on the non-privacy-preserving modes in such cases
+12:52 < BlueMatt> but maybe only after having the regular p2p code make some new connections
+12:52 < ariard> BlueMatt: exactly that's kind of the idea of having a watchdog for this
+12:52 < BlueMatt> you dont need anything fancy to do that, though
+12:53 < BlueMatt> only a sleep(300) :)
+12:53 < ariard> that's hacky
+12:53 < BlueMatt> no its not
+12:53 < BlueMatt> its actually exactly what you want here
+12:53 < sipa> wth are you guys talking about
+12:53 -!- FoxTrote [aa00c04b@170.0.192.75] has joined #bitcoin-core-dev
+12:53 < BlueMatt> give net_processing a chance to figure out how to fetch the block if we're missing one
+12:53 < ariard> BlueMatt: don't use a privacy-harming communication channel if you don't have to
+12:53 < BlueMatt> and if it fails to within 5 minutes, turn on the http client and give up privacy for the block data
+12:54 < BlueMatt> right, exactly, thats why you sleep(300) :)
+12:54 < wumpus> ~5 minutes to go
+12:54 < jnewbery> I agree with sipa
+12:54 < BlueMatt> sipa: if, eg, you learn a header over radio, but that source doesnt provide blocks, what do you do?
+12:54 < BlueMatt> oh, wait, is this still a meeting? lol I'll shut up.
+12:54 < jnewbery> perhaps this more speculative discussion is better suited to bitcoin-wizards or similar?
+12:54 < ariard> BlueMatt: but no, you may start to be eclipsed after IBD and due to block variance sleep doesn't make sense IMO :p
+12:54 < sipa> sleep(300) till the end of the meeting
+12:55 < wumpus> jnewbery: yes, though we don't have any other topics queued for today
+12:55 < ariard> jnewbery: agree again I invite people to pursue discussion on the issue or PR, it's better suited
+12:55 < sipa> BlueMatt: i don't know, why would you do anything?
+12:56 < sipa> i feel like i'm missing a lot of context
+12:56 -!- promag [~promag@bl19-22-20.dsl.telepac.pt] has joined #bitcoin-core-dev
+12:56 < wumpus> anyhow I agree with jonatack: restrict scope initially, don't try to do too many out-there things at once
+12:57 < wumpus> though it's good that you're clearly having a lot of ideas
+12:57 < ariard> sipa: yes I will try to come with some Q&A-style of doc to inform people better
+12:57 < wumpus> but some of us hardly follow :)
+12:57 < BlueMatt> ariard: no thats my point - you learn absolutely that there is probably something amiss if you have headers for which you do not have a block, and several of these things are fine from a privacy perspective to learn that. in that case, it makes sense for net_processing to go make some new connections and see if it cant find the block. if it fails to after some time, go query cloudflare.deanonymizingseed.com cause, like, its better 
+12:57 < BlueMatt> than not getting the block (at least if you're a ln user or so and have it configured to do this), but you first want to give net_processing a chance here. so, essentially, sleep(300) is exactly what you want :)
+12:58 < ariard> wumpus: thanks, I want to spend more time scoping to the minimal step but yet extendable after
+12:58 < BlueMatt> wumpus: lol, sorry...I wrote out all 4 of the (headers-over-dns, headers-over-radio, blocks-over-http, secondary-p2p-client) things before, so apologies we're a bit three-steps-ahead here :/
+12:59 < BlueMatt> this all was, in fact, the rust branches.
+13:00 -!- jarthur [~jarthur@2605:6000:1019:4971:585c:9c4b:644f:b619] has joined #bitcoin-core-dev
+13:00 < wumpus> BlueMatt: yes, I know, it was great! unfortuantely the approach to integrate them into bitcoin core didn't work with regard to review and organizationaly
+13:00 < ariard> BlueMatt: okay I see your point, but you need to dissociate cleanly 1) anomalies detection and 2) reaction
+13:00 < ariard> reaction may happen through net_processing or alt-transports
+13:00 < BlueMatt> wullon5: yea, no, not complaining, just providing historical context for folks
+13:00 < BlueMatt> wumpus: 
+13:00 -!- promag [~promag@bl19-22-20.dsl.telepac.pt] has quit [Ping timeout: 246 seconds]
+13:00 < BlueMatt> ariard: right, kinda, but I think part of my goal at least here is that there should be an absolute minmal amount of common code between the various sources
+13:01 < wumpus> wrapping up the meeting
+13:01 < wumpus> thanks everyone for the lively discussion
+13:01 < ariard> BlueMatt: ideally yes but I fear our internal components aren't that much clean yet
+13:01 < BlueMatt> ariard: cause if there's a bug in anomoly-detection (which we've had 20 issues with in the past, turns out its hard to get right), then all of a sudden your 5 block sources are all stuck, instead of providing the redundancy they're there for.
+13:01 < wumpus> #endmeeting
+13:01 < lightningbot> Meeting ended Thu May 21 20:01:41 2020 UTC.  Information about MeetBot at http://wiki.debian.org/MeetBot . (v 0.1.4)
+13:01 < lightningbot> Minutes:        http://www.erisian.com.au/meetbot/bitcoin-core-dev/2020/bitcoin-core-dev.2020-05-21-19.01.html
+13:01 < lightningbot> Minutes (text): http://www.erisian.com.au/meetbot/bitcoin-core-dev/2020/bitcoin-core-dev.2020-05-21-19.01.txt
+13:01 < lightningbot> Log:            http://www.erisian.com.au/meetbot/bitcoin-core-dev/2020/bitcoin-core-dev.2020-05-21-19.01.log.html
+13:01 < sipa> BlueMatt: i think that depends on the goal; for some transports i think it's easier to have a "i can relay bytes/messages back and forth for bitcoind, but i don't want to care about all the protocol details like blocks and transactions and addresses"
+13:02 < sipa> it's additional complexity for the transport to need to care about these things
+13:02 < ariard> BlueMatt: I spent some times thinking about anomaly detection, there is clearly a tradeoff between false positive and complexity
+13:03 < ariard> and even worst, you may want to fine-tune depending of your second-layer timelocks...
+13:03 < BlueMatt> ariard: right! sleep(300) is bulletproof. detecting slow chain progress is....not :)
+13:04 < sipa> BlueMatt: by "sleep(300)" you actually mean "a fixed time-out" right, not an actual sleep in the code
+13:04 < BlueMatt> sipa: right, sure lol
+13:05 < BlueMatt> sipa: as for "the goal", thats true, if we want to model after eg tor's pluggable transport, we want a byte stream, but I think bitcoin data is a little too unique for that - because its so small, we end up being able to shove it in all kinds of queries
+13:05 < BlueMatt> and we probaby often want it to be unidirectional
+13:05 < sipa> BlueMatt: i just think there are distinct goals, and doing both right means doing things at a different layer
+13:07 < BlueMatt> right, fair. i guess just in my past thinking on this I've always considered mostly more nice bitcoin data providers, less p2p-encryption/modoulation-style providers. I agree that would be a cool goal as well, though i guess is fully separate from things I was thinking about
+13:07 < sipa> one is a transport that deals with concepts like blocks and transactions, and probably plugs in at the validation layer directly
+13:08 < sipa> another is just connecting bitcoinds, which is more like routing P2P traffic directly (and may even be dealt with as a "peer" from the net perspective, subject to throtting/banning if better DoS protection are added)
+13:08 < BlueMatt> right.
+13:10 < ariard> sipa: but it's a layer question, 1) may rely on 2) once serialization is done?
+13:11 < sipa> ariard: i don't know what you mean
+13:11 < BlueMatt> ariard: maybe, but (1) provides you ability to get data from things that arent bidirectional high-bandwidth sockets. (2) is just a way to shove bitcoin p2p protocol over top of something else.
+13:13 < ariard> sipa: you may have a first layer caring about protocols details like blocks and transactions and then passing to a dumb byte stream transport
+13:14 < ariard> or sorry I think I don't get your distinction laid out above, if you have concrete example
+13:14 < BlueMatt> ariard: if you're farmiliar, (2) is tor's pluggable transport system.
+13:15 < BlueMatt> (which is to say, just a socks proxy that does its own encryption/scrambling, but doesn't use a different protocol inside)
+13:16 < ariard> BlueMatt: okay I see compare to blocksat where you do have your own serialization for compressing tx?
+13:17 < BlueMatt> right, and especially where you have unidirectional coms
+13:17 < BlueMatt> like blocksat
+13:17 < BlueMatt> or like headers-over-dns where you have to do strange queries (height -> header data instead of hash -> header data)
+13:19 < sipa> imagine we'd have had support and a nice variety of actually used protocols of the first type, before compact blocks existed
+13:19 < sipa> compact blocks gets invented, and now each protocol needs to invent its own way of adding support for that in its protocol
+13:20 < sipa> things that are just route-a-dumb-byte-stream (which isn't applicable always for sure) would just immediately get support for it without any effort
+13:21 < sipa> if you do things at a lower level, there may be a cost incurred to keep up with protocol development
+13:21 < sipa> so i really think what is appropriate where is very application specific
+13:21 < sipa> but interfaces may differ wildly between them
+13:23 < ariard> sipa: agree you may have a driver lib somewhere? I think some serialization may be reused between radio and blocksat or stuff like this?
+13:23 < BlueMatt> right, its a question of goals
+13:23 < BlueMatt> my thinking was the goal wasnt to try to just scramble the bitcoin data to make it look like noise on the wire, it was to actually have redundant codepaths (and network paths) to fetch block data
+13:24 < BlueMatt> which is a very different goal from only getting around port 8333 blocking
+13:24 < BlueMatt> ariard: those two goals have very different APIs, though.
+13:24 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has joined #bitcoin-core-dev
+13:25 -!- LucasNickle [~LucasNick@189.237.68.135] has joined #bitcoin-core-dev
+13:36 -!- EagleTM [~EagleTM@unaffiliated/eagletm] has joined #bitcoin-core-dev
+13:40 -!- jarthur [~jarthur@2605:6000:1019:4971:585c:9c4b:644f:b619] has quit []
+13:46 -!- kristapsk [~KK@gateway/tor-sasl/kristapsk] has quit [Remote host closed the connection]
+13:47 -!- Chris_Stewart_5 [~Chris_Ste@unaffiliated/chris-stewart-5/x-3612383] has quit [Ping timeout: 240 seconds]
+13:52 -!- kristapsk [~KK@gateway/tor-sasl/kristapsk] has joined #bitcoin-core-dev
+13:53 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has quit [Remote host closed the connection]
+13:53 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has joined #bitcoin-core-dev
+13:59 -!- SiAnDoG [~514nDoG@gateway/tor-sasl/siandog] has quit [Quit: Leaving]
+13:59 -!- SiAnDoG [~514nDoG@gateway/tor-sasl/siandog] has joined #bitcoin-core-dev
+14:00 -!- mshadle1 [~mshadle@195.206.169.238] has quit []
+14:00 -!- jeremyrubin [~jr@c-67-180-60-249.hsd1.ca.comcast.net] has quit [Ping timeout: 256 seconds]
+14:01 -!- jeremyrubin [~jr@c-67-180-60-249.hsd1.ca.comcast.net] has joined #bitcoin-core-dev
+14:09 -!- vasild [~vd@gateway/tor-sasl/vasild] has quit [Ping timeout: 240 seconds]
+14:11 -!- vasild [~vd@gateway/tor-sasl/vasild] has joined #bitcoin-core-dev
+14:12 -!- troygiorshev [~troygiors@CPEdcef09a0ed55-CM0c473d74be00.cpe.net.cable.rogers.com] has quit [Ping timeout: 256 seconds]
+14:13 -!- EagleTM [~EagleTM@unaffiliated/eagletm] has quit [Ping timeout: 256 seconds]
+14:13 -!- emilengler [~emilengle@stratum0/entity/emilengler] has quit [Remote host closed the connection]
+14:22 -!- Relis [~Relis@85.255.232.252] has quit [Ping timeout: 256 seconds]
+14:22 -!- jtk [~jtk@217.138.204.89] has joined #bitcoin-core-dev
+14:25 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has joined #bitcoin-core-dev
+14:40 -!- shesek [~shesek@unaffiliated/shesek] has quit [Ping timeout: 260 seconds]
+14:43 -!- shesek [~shesek@185.3.145.28] has joined #bitcoin-core-dev
+14:43 -!- Chris_Stewart_5 [~Chris_Ste@unaffiliated/chris-stewart-5/x-3612383] has joined #bitcoin-core-dev
+14:45 -!- marcoagner [~user@bl13-226-166.dsl.telepac.pt] has quit [Ping timeout: 265 seconds]
+15:00 -!- helo [~helo@2604:a880:800:10::15:2001] has joined #bitcoin-core-dev
+15:00 -!- helo [~helo@2604:a880:800:10::15:2001] has quit [Changing host]
+15:00 -!- helo [~helo@unaffiliated/helo] has joined #bitcoin-core-dev
+15:05 -!- waxwing [~waxwing@unaffiliated/waxwing] has quit [Ping timeout: 246 seconds]
+15:05 -!- Guyver2 [Guyver@guyver2.xs4all.nl] has quit [Quit: Going offline, see ya! (www.adiirc.com)]
+15:07 -!- FoxTrote [aa00c04b@170.0.192.75] has quit [Remote host closed the connection]
+15:11 -!- waxwing [~waxwing@193.29.57.116] has joined #bitcoin-core-dev
+15:13 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+15:13 < bitcoin-git> [bitcoin] MDrollette opened pull request #19043: torcontrol: add -tortarget config (master...tor-hidden-target) https://github.com/bitcoin/bitcoin/pull/19043
+15:13 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+15:16 -!- shesek [~shesek@185.3.145.28] has quit [Changing host]
+15:16 -!- shesek [~shesek@unaffiliated/shesek] has joined #bitcoin-core-dev
+15:17 -!- waxwing [~waxwing@193.29.57.116] has quit [Changing host]
+15:17 -!- waxwing [~waxwing@unaffiliated/waxwing] has joined #bitcoin-core-dev
+15:22 -!- mdunnio [~mdunnio@208.59.170.5] has quit [Remote host closed the connection]
+15:31 -!- theStack [~honeybadg@vps1648322.vs.webtropia-customer.com] has quit [Quit: Lost terminal]
+15:33 -!- troygiorshev [~troygiors@CPEdcef09a0ed55-CM0c473d74be00.cpe.net.cable.rogers.com] has joined #bitcoin-core-dev
+15:51 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+15:51 < bitcoin-git> [bitcoin] jnewbery opened pull request #19044: net processing: Add support for getcfilters (master...2020-05-cfilters) https://github.com/bitcoin/bitcoin/pull/19044
+15:51 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+15:53 -!- justanotheruser [~justanoth@unaffiliated/justanotheruser] has quit [Ping timeout: 260 seconds]
+15:53 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has quit [Remote host closed the connection]
+15:53 -!- ctrlbreak_MAD [~ctrlbreak@159.2.182.106] has joined #bitcoin-core-dev
+15:58 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+15:58 < bitcoin-git> [bitcoin] gabrieldonadel opened pull request #19045: qt: pt_BR translation adjustments (master...2020-05-qt-pt_BR-translation-adjustments) https://github.com/bitcoin/bitcoin/pull/19045
+15:58 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+16:02 -!- dfmb_ [~dfmb_@unaffiliated/dfmb/x-4009105] has quit [Read error: Connection reset by peer]
+16:09 -!- justanotheruser [~justanoth@unaffiliated/justanotheruser] has joined #bitcoin-core-dev
+16:13 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Remote host closed the connection]
+16:15 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+16:15 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Remote host closed the connection]
+16:15 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+16:18 -!- Dean_Guss [~dean@gateway/tor-sasl/deanguss] has joined #bitcoin-core-dev
+16:19 -!- DeanWeen [~dean@gateway/tor-sasl/deanguss] has quit [Ping timeout: 240 seconds]
+16:20 -!- owowo [~ovovo@unaffiliated/ovovo] has quit [Ping timeout: 240 seconds]
+16:22 -!- ironhelix [~d@193.56.117.93] has quit [Ping timeout: 260 seconds]
+16:25 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+16:25 < bitcoin-git> [bitcoin] fanquake closed pull request #19045: qt: pt_BR translation adjustments (master...2020-05-qt-pt_BR-translation-adjustments) https://github.com/bitcoin/bitcoin/pull/19045
+16:25 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+16:25 -!- owowo [~ovovo@s91904424.blix.com] has joined #bitcoin-core-dev
+16:25 -!- owowo [~ovovo@s91904424.blix.com] has quit [Changing host]
+16:25 -!- owowo [~ovovo@unaffiliated/ovovo] has joined #bitcoin-core-dev
+16:33 -!- promag [~promag@Bl19-22-20.dsl.telepac.pt] has quit [Remote host closed the connection]
+16:33 -!- promag [~promag@bl19-22-20.dsl.telepac.pt] has joined #bitcoin-core-dev
+16:38 -!- promag [~promag@bl19-22-20.dsl.telepac.pt] has quit [Ping timeout: 258 seconds]
+16:42 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has quit [Remote host closed the connection]
+16:46 -!- dfmb_ [~dfmb_@unaffiliated/dfmb/x-4009105] has joined #bitcoin-core-dev
+16:49 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Remote host closed the connection]
+16:52 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+16:52 < bitcoin-git> [bitcoin] fanquake pushed 5 commits to master: https://github.com/bitcoin/bitcoin/compare/9abed46871a7...ad3a61c5f5c9
+16:52 < bitcoin-git> bitcoin/master d160069 gzhao408: [wallet] remove nLastResend logic
+16:52 < bitcoin-git> bitcoin/master a7ebe48 gzhao408: [rpc] add unbroadcast info to mempool entries and getmempoolinfo
+16:52 < bitcoin-git> bitcoin/master 9d3f7eb gzhao408: [mempool] sanity check that all unbroadcast txns are in mempool
+16:52 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+16:52 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+16:52 < bitcoin-git> [bitcoin] fanquake merged pull request #18895: p2p: unbroadcast followups: rpcs, nLastResend, mempool sanity check (master...unbroadcast-followup) https://github.com/bitcoin/bitcoin/pull/18895
+16:52 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+17:00 -!- jtk [~jtk@217.138.204.89] has quit []
+17:13 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has joined #bitcoin-core-dev
+17:18 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has quit [Ping timeout: 264 seconds]
+17:20 -!- CubicEarth [~CubicEart@c-67-168-1-172.hsd1.wa.comcast.net] has quit [Ping timeout: 272 seconds]
+17:21 -!- vladan1 [~vladan@84.39.116.180] has joined #bitcoin-core-dev
+17:22 -!- CubicEarth [~CubicEart@c-67-168-1-172.hsd1.wa.comcast.net] has joined #bitcoin-core-dev
+17:23 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+17:27 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Ping timeout: 256 seconds]
+17:33 -!- braydonf [~braydon@gateway/tor-sasl/braydonf] has quit [Remote host closed the connection]
+17:39 -!- braydonf [~braydon@gateway/tor-sasl/braydonf] has joined #bitcoin-core-dev
+17:47 -!- braydonf [~braydon@gateway/tor-sasl/braydonf] has quit [Quit: = ""]
+18:01 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+18:06 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Ping timeout: 260 seconds]
+18:23 -!- RamdonEstimate [b7dc6e46@183.220.110.70] has joined #bitcoin-core-dev
+18:40 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+18:44 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Ping timeout: 246 seconds]
+18:49 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+18:49 < bitcoin-git> [bitcoin] meshcollider pushed 6 commits to master: https://github.com/bitcoin/bitcoin/compare/ad3a61c5f5c9...ccd85b57af60
+18:49 < bitcoin-git> bitcoin/master b59b450 Andrew Chow: have GenerateNewKey and DeriveNewChildKey take a CHDChain as an argument
+18:49 < bitcoin-git> bitcoin/master 45f2f6a Andrew Chow: Determine inactive HD seeds from key metadata and track them in LegacyScri...
+18:49 < bitcoin-git> bitcoin/master c93082e Andrew Chow: Generate new keys for inactive seeds after marking used
+18:49 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+18:50 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+18:50 < bitcoin-git> [bitcoin] meshcollider merged pull request #17681: wallet: Keep inactive seeds after sethdseed and derive keys from them as needed (master...keep-inactive-seeds) https://github.com/bitcoin/bitcoin/pull/17681
+18:50 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+19:09 -!- ransua [6da684fd@109.166.132.253] has quit [Ping timeout: 245 seconds]
+19:22 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+19:22 < bitcoin-git> [bitcoin] meshcollider pushed 5 commits to master: https://github.com/bitcoin/bitcoin/compare/ccd85b57af60...df303ceb6505
+19:22 < bitcoin-git> bitcoin/master 610030d Andrew Chow: docs: Add release notes for descriptor wallets
+19:22 < bitcoin-git> bitcoin/master b9073c8 Andrew Chow: rpc: createwallet warning that descriptor wallets are experimental
+19:22 < bitcoin-git> bitcoin/master 89b1ce1 Andrew Chow: Remove unimplemented SetCrypted from DescriptorScriptPubKeyMan
+19:22 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+19:23 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+19:23 < bitcoin-git> [bitcoin] meshcollider merged pull request #18787: wallet: descriptor wallet release notes and cleanups (master...desc-wallet-followup) https://github.com/bitcoin/bitcoin/pull/18787
+19:23 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+19:45 -!- RamdonEstimate [b7dc6e46@183.220.110.70] has quit [Ping timeout: 245 seconds]
+20:00 -!- vladan1 [~vladan@84.39.116.180] has quit []
+20:01 -!- surja795 [~surja795@c-24-61-194-104.hsd1.ma.comcast.net] has quit [Remote host closed the connection]
+20:02 -!- asoltys [~root@s207-81-214-2.bc.hsia.telus.net] has joined #bitcoin-core-dev
+20:05 -!- surja795 [~surja795@c-24-61-194-104.hsd1.ma.comcast.net] has joined #bitcoin-core-dev
+20:10 -!- surja795 [~surja795@c-24-61-194-104.hsd1.ma.comcast.net] has quit [Ping timeout: 260 seconds]
+20:17 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+20:21 -!- |Kin| [~|Kin|@217.138.204.89] has joined #bitcoin-core-dev
+20:22 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Ping timeout: 272 seconds]
+20:34 -!- bitcoin-git [~bitcoin-g@x0f.org] has joined #bitcoin-core-dev
+20:34 < bitcoin-git> [bitcoin] achow101 opened pull request #19046: Replace CWallet::Set* functions that use memonly with Add/Load variants (master...rm-load-memonly) https://github.com/bitcoin/bitcoin/pull/19046
+20:34 -!- bitcoin-git [~bitcoin-g@x0f.org] has left #bitcoin-core-dev []
+20:50 -!- troygiorshev [~troygiors@CPEdcef09a0ed55-CM0c473d74be00.cpe.net.cable.rogers.com] has quit [Ping timeout: 264 seconds]
+21:03 -!- Highway61 [~Thunderbi@107.182.234.161] has quit [Ping timeout: 256 seconds]
+21:15 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has joined #bitcoin-core-dev
+21:20 -!- vasild_ [~vd@gateway/tor-sasl/vasild] has joined #bitcoin-core-dev
+21:20 -!- AaronvanW [~AaronvanW@unaffiliated/aaronvanw] has quit [Ping timeout: 256 seconds]
+21:24 -!- vasild [~vd@gateway/tor-sasl/vasild] has quit [Ping timeout: 240 seconds]
+21:24 -!- vasild_ is now known as vasild
+21:30 -!- mol_ [~mol@unaffiliated/molly] has joined #bitcoin-core-dev
+21:33 -!- molz_ [~mol@unaffiliated/molly] has quit [Ping timeout: 256 seconds]
+21:53 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has joined #bitcoin-core-dev
+21:58 -!- proofofkeags [~proofofke@174-29-9-247.hlrn.qwest.net] has quit [Ping timeout: 265 seconds]
+22:00 -!- dfmb_ [~dfmb_@unaffiliated/dfmb/x-4009105] has quit [Ping timeout: 258 seconds]
+22:00 -!- Talkless [~Talkless@hst-227-49.splius.lt] has joined #bitcoin-core-dev
+22:06 -!- soju [uid403160@gateway/web/irccloud.com/x-hevkxsdewzznqpza] has joined #bitcoin-core-dev
+22:07 -!- sipsorcery [~sipsorcer@37.228.243.107] has quit [Ping timeout: 260 seconds]
+22:31 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has quit [Quit: This computer has gone to sleep]
+22:48 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has joined #bitcoin-core-dev
+22:50 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has joined #bitcoin-core-dev
+22:51 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has quit [Client Quit]
+22:54 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has quit [Ping timeout: 256 seconds]
+22:57 -!- Relis [~Relis@cpc96290-lewi18-2-0-cust910.2-4.cable.virginm.net] has joined #bitcoin-core-dev
+23:00 -!- |Kin| [~|Kin|@217.138.204.89] has quit []
+23:03 -!- sipsorcery [~sipsorcer@37.228.243.107] has joined #bitcoin-core-dev
+23:16 -!- net| [~net|@unaffiliated/unit41] has joined #bitcoin-core-dev
+23:18 < net|> https://github.com/tecan/EcoCoin/tree/master/qtCoin  new screenshots  i made a new theme editor you guys might like https://github.com/tecan/QT-ThemeEditor
+23:18 < net|> also this https://github.com/tecan/qtBarcode has a nice detector for qrcodes
+23:22 -!- sunweaver1 [~sunweaver@84.39.116.180] has joined #bitcoin-core-dev
+23:23 -!- jb55 [~jb55@gateway/tor-sasl/jb55] has quit [Remote host closed the connection]
+23:23 -!- jb55 [~jb55@gateway/tor-sasl/jb55] has joined #bitcoin-core-dev
+23:24 -!- dfmb_ [~dfmb_@unaffiliated/dfmb/x-4009105] has joined #bitcoin-core-dev
+23:37 -!- sipsorcery [~sipsorcer@37.228.243.107] has quit [Ping timeout: 256 seconds]
+23:40 -!- Randolf [~randolf@184.70.10.188] has joined #bitcoin-core-dev
+23:46 -!- PaulTroon [~paultroon@h-5-150-248-150.NA.cust.bahnhof.se] has joined #bitcoin-core-dev
+23:50 -!- marcoagner [~user@2001:8a0:6a5f:a900:6d3e:1158:b50:97b6] has joined #bitcoin-core-dev
+--- Log closed Fri May 22 00:00:28 2020
