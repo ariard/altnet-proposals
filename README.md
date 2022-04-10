@@ -1,139 +1,50 @@
 ## Abstract
 
-An implementation and deployment plan for `AltNet` is proposed, a new subsystem aiming towards providing a generic framework for integrating alternative transport communication channels inside Bitcoin Core.
+An implementation and deployment plan for `AltNet` is proposed, a new subsystem aiming towards 
+providing a generic framework for integrating alternative transport communication channels inside
+Bitcoin Core, hardening the p2p network.
 
-## Design goals
+### Design goals
 
 1. Increase network security by increasing link layer/peers diversity
-1. Increase transactions anonymity by providing identityless broadcast
-1. Increase application security by allowing corrective behavior due to anomalies detection
+2. Increase transactions anonymity by providing identityless broadcast
+3. Increase application security by allowing corrective behavior due to anomalies detection
 
-## Why alt-communications channels should be supported in Core ?
+### Plan
 
-Ecosystem-wise, there are already solutions to benefit from alternative transport protocol. They actually rely on running a modified Bitcoin Core which is cumbersome for both alternative transport maintainer and extend user trust to them, without the guarantees of Bitcoin Core development process. Integrating alt-communications in Core would 1) ease deployement 2) enable composability 3) enable traffic assignement 4) help drivers components reusability. Instead of each of them recoding its own udp flow or address management they may reuse a driver lib.
+The phase 1 aims to achieve headers-sync between Bitcoin nodes over the Lightning p2p network. Each
+Bitcoin node is locally connected to a Lightning node, and the headers should flow over the Noise
+communication channel.
 
-## Topics
+There are few building blocks required :
+1. a `rust-multiprocess` library to communicate with Bitcoin Core in a multiprocess setup
+2. a `Validation` interface to access the validation engine
+3. a `altnet-orchester` daemon to serve as a C2C for the alternative transport driver
+4. a `altnet-lightning` daemon to connect to a Lightning node
+5. few hacks in LDK/LDK-sample
 
-- Architecture
-- Review Process
-- Drivers-application
-- Drivers-interface
-- Drivers-libs
-- Build system
-- User interface
-- Testing
-- Watchdog
-- Fetching Logic
-- Broadcast Logic
-- List of Altcoms
-- Resources
+### Ressources
 
-## Architecture
+- Github issue: https://github.com/bitcoin/bitcoin/issues/18989
+- Poc PR "Lightning sync": https://github.com/bitcoin/bitcoin/pull/18988
+- Poc PR "Watchdog": https://github.com/bitcoin/bitcoin/pull/18987
 
-### Why not integrating alt-coms in net.h ?
+## Basics
 
-Beyond a cumbersome refactoring on some critical-path, it won't fit both at the net level and processing level. At the net level, our network stack relies on 1) Berkeley socket model 2) TCP socket 3) peer policy on Internet topology (ASN/IP prefix). At the processing level, the link may be unidirectional or bandwidth-limited and therefore may not fulfill common expectations.
+### Why alternative communications for the Bitcoin p2p network ?
 
-### What should be the architecture, thread-vs-process, multiple daemons ?
+The current networking approach suffers from a wide range of issues with regards to
+[transaction origin inference](https://github.com/bitcoin/bips/blob/master/bip-0156.mediawiki),
+counter-measures against [key infrastructure attackers](https://www.comp.nus.edu.sg/~kangms/papers/erebus-attack.pdf),
+and [harder security assumptions](https://lists.linuxfoundation.org/pipermail/lightning-dev/2019-December/002369.html)
+of higher-level protocols. Being heavily optimized and at same time trying to solve diverse goals
+like reasonable network security , tx-relay privacy, hindering block-topology, peer diversity, ...
+a functional networking stack is likely unable to address aforementioned issues without [compromising](https://github.com/bitcoin/bitcoin/pull/17332)
+its [robustness](https://bitcoin.stackexchange.com/questions/81503/what-is-the-tradeoff-between-privacy-and-implementation-complexity-of-dandelion/81504#81504).
 
-For fault-tolerance, a separate process seems the best option. That way any bug in low-level driver, even worst-one like Remote Code Execution should be mitigated at the kernel-level. Driver-framework may
-be made flexible enough such that each driver is a daemon in itself by fork() behind the interface if necessary. The master process may be multi-thread to seperate data reading/writing from processing.
-
-### What should be interfaces with codebase ?
-
-A new `interfaces::Altnet` may be introduced, consumed by a new thread `AltnetHandler`. We may reuse the new validation queue from https://github.com/bitcoin/bitcoin/pull/18963.
-
-### What should be internal components ?
-
-At the high-level, you may have a high-level RPC user-interface to 1) manage drivers state 2) assign traffic to drivers 3) push tx to a targeted-drivr. Fetching logic would be directly connected to drives-interface and process protocol messages from then. Broadcast logic would do transaction propagation but not relay.
-
-
-```
-
-
-          _____________________               _____________
-         |                     |             |             |
-         |  interface::Altnet  |             |     RPC     |
-         |_____________________|             |_____________|
-                   |                            |      |
-                   |_______________             |      |
-                                   |            |      |
-                           ________|________    |    __|_______________
-                          |                 |   |   |                  |
-                          |  FetchingLogic  |   |   |  BroadcastLogic  |
-                          |_________________|   |   |__________________|
-                                          |     |      |
-                                          |     |      |
-                                        __|_____|______|_____
-                                       |                     |
-                                       |  Drivers-interface  |
-                                       |_____________________|
-
-
-```
-
-
-
-### Should drivers be statically or dynamically-loaded ?
-
-For security reasons, statically linked.
-
-## Review Process
-
-### How to avoid a review iceberg ?
-
-First chunk before to get _something_ functional may be quite consequent. Therefore review may be splitted in temporary non-used chunks like `multiprocess` project.
-
-## Drivers-application
-
-### How drivers may be integrated ?
-
-Each driver implementation should bind to some abstract class `CDriver` mapping to generic operations.
-
-## Drivers-interface
-
-## Drivers-libs
-
-### What can be reused accross driver implementation ?
-
-Peer management or message compressing may be implemented as libraries.
-
-## Build system
-
-## Testing
-
-## Watchdog
-
-### What the watchdog purpose ?
-
-Monitor network, mempool or block issuance anomalies and trigger events to be consumed internally or by an external application. Thus reacting to system faults to take corrective behaviors. I.e if blocks aree detected for not being received since a hour, a LN node may preemptively close its channels.
-
-## Fetching Logic
-
-### What fetching logic to implement ?
-
-If this new p2p stack is partially designed to serve in emergency case, it should be as robust as we can. Therefore we may implement [reverse-headers sync](https://en.bitcoin.it/wiki/User:Gmaxwell/Reverse_header-fetching_sync).
-
-### What if we receive a longuest-valid headers chain from a unidirectional channel ?
-
-We should send `INV(MSG_BLOCK)` to any bidirectional block channels to move chain tip forward.
-
-## List of Altcoms
-
-- [meek](https://gitweb.torproject.org/pluggable-transports/meek.git/)
-- [Snowflake](https://gitweb.torproject.org/pluggable-transports/snowflake.git/)
-- [I2P](https://geti2p.net/en/)
-- [Lightning transport protocol](https://github.com/lightningnetwork/lightning-rfc/blob/master/08-transport.md)
-- amateur radio
-- Bluetooth
-- WiFi
-- LoRa
-- [headers-over-DnS](https://github.com/bitcoin/bitcoin/pull/16834)
-
-XXX: sort alt-coms by properties
- 
-## Resources
-
-* [Erebus paper on state of key infrastructure attacks](https://www.comp.nus.edu.sg/~kangms/papers/erebus-attack.pdf)
-* [On complexity of integrating tx-relay privacy-preserving enhancement](https://bitcoin.stackexchange.com/questions/81503/what-is-the-tradeoff-between-privacy-and-implementation-complexity-of-dandelion/81504#81504)
-* [On improving Bitcoin Network Resilience through Weak-Radio Signals](https://stanford2017.scalingbitcoin.org/files/Day2/Weak-Signal-Radio-Communications-for-Bitcoin-Network-Resilience.pdf)
+Ideally you want to address scenarios with higher security requirements like an exchange receiving
+headers-over-DNS to detect tip pinning. A conscientious user always relying on tx-over-radio for
+each of its coins sends. You can also think about a LN hub willingly to use a HTTPS connection to a
+block explorer for emergency tx broadcast or an SPV wallet receiving filters-headers-over-obfs4 to
+defeat local Internet censorship. Of course, you can still rely on external modules or project, but
+better integrating them with Core to ease deployment and combine them for increased benefits.
